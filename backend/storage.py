@@ -21,7 +21,7 @@ from sqlalchemy.orm import selectinload
 
 from config import Settings
 from db.models import Base, CredentialCount, Event, GeoIPCache, Payload
-from schemas import EnrichedEvent, EventOut, GeoInfo, LoginInfo, Service, Severity
+from schemas import SSH_HANDSHAKE_KIND, EnrichedEvent, EventOut, GeoInfo, LoginInfo, Service, Severity
 
 logger = logging.getLogger(__name__)
 
@@ -161,9 +161,19 @@ class EventRepository:
         since: Optional[dt.datetime] = None,
         until: Optional[dt.datetime] = None,
     ) -> list[EventOut]:
-        """Query events with filters, newest first."""
+        """Query events with filters, newest first.
+
+        SSH handshakes (a client connecting, before any login) are stored for
+        completeness but kept off the feed: they carry no attacker action.
+        """
         async with self._storage.session() as session:
-            stmt = select(Event).order_by(Event.ts.desc()).limit(limit)
+            kind = func.coalesce(Event.additional_info["event_kind"].as_string(), "")
+            stmt = (
+                select(Event)
+                .where(kind != SSH_HANDSHAKE_KIND)
+                .order_by(Event.ts.desc())
+                .limit(limit)
+            )
 
             if service:
                 stmt = stmt.where(Event.service == service)

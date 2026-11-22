@@ -101,6 +101,8 @@ class EnrichedEventStore:
 
     async def _on_enriched_event(self, event: EnrichedEvent) -> None:
         """Handle enriched event from pipeline - broadcast to WebSocket clients."""
+        if event._is_handshake_event():
+            return  # same rule as the REST feed: handshakes carry no attacker action
         if self._sockets:
             message = {"type": "event", "event": event.model_dump(mode="json")}
             for socket in list(self._sockets):
@@ -232,6 +234,7 @@ async def _stats(request: web.Request) -> t.Any:
     storage = _storage(request)
     delta = WINDOWS[window][0]
     stats = await storage.events.stats(delta)
+    stats["window"] = window  # the dashboard's WindowKey ("1h"), not a Python timedelta string
 
     record_api_request("/stats", request.method, 200)
     record_api_latency("/stats", time.time() - start_time)
@@ -253,7 +256,8 @@ async def _timeseries(request: web.Request) -> t.Any:
     record_api_request("/stats/timeseries", request.method, 200)
     record_api_latency("/stats/timeseries", time.time() - start_time)
 
-    return web.json_response(timeseries)
+    # Same shape as the dashboard's Timeseries type: {window, bucket_seconds, points}.
+    return web.json_response({"window": window, "bucket_seconds": bucket_seconds, "points": timeseries})
 
 
 async def _websocket(request: web.Request) -> web.WebSocketResponse:

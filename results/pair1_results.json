@@ -1,0 +1,139 @@
+{
+  "best_model": "Random forest",
+  "config": {
+    "decision_threshold": 0.5,
+    "dropped_constant_columns": [
+      "num_outbound_cmds",
+      "is_host_login"
+    ],
+    "seed": 42,
+    "training_rows": 20153,
+    "tuned_parameters": {
+      "Decision tree": {
+        "max_depth": 12,
+        "min_samples_leaf": 1
+      },
+      "Logistic regression": {
+        "C": 10
+      },
+      "Random forest": {
+        "max_features": 0.3,
+        "min_samples_leaf": 1
+      }
+    },
+    "validation_attacks": 2349,
+    "validation_rows": 5039
+  },
+  "data": {
+    "Test_data.csv": {
+      "bytes": 2416180,
+      "sha256": "a58db8c605e58411f6432dd9ab2fe10e1d768f058f5453e9e279788c7219caf8"
+    },
+    "Train_data.csv": {
+      "bytes": 2875560,
+      "sha256": "1e40eb667611ab507870fc5b5ef0a844201ec094915d78d79f4665937e43b07a"
+    }
+  },
+  "environment": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "python": "3.13.18",
+    "scikit-learn": "1.9.1"
+  },
+  "feature_selection": {
+    "All features": {
+      "F1": 0.9979,
+      "PR-AUC": 1.0,
+      "ROC-AUC": 1.0,
+      "accuracy": 0.998,
+      "attacks caught": 2339,
+      "false alarms": 0,
+      "features": 39,
+      "missed attacks": 10,
+      "normal passed": 2690,
+      "precision": 1.0,
+      "recall": 0.9957
+    },
+    "HoneyBadger-compatible": {
+      "F1": 0.9835,
+      "PR-AUC": 0.9959,
+      "ROC-AUC": 0.9962,
+      "accuracy": 0.9847,
+      "attacks caught": 2293,
+      "false alarms": 21,
+      "features": 11,
+      "missed attacks": 56,
+      "normal passed": 2669,
+      "precision": 0.9909,
+      "recall": 0.9762
+    },
+    "Top 15 features": {
+      "F1": 0.9974,
+      "PR-AUC": 1.0,
+      "ROC-AUC": 1.0,
+      "accuracy": 0.9976,
+      "attacks caught": 2338,
+      "false alarms": 1,
+      "features": 15,
+      "missed attacks": 11,
+      "normal passed": 2689,
+      "precision": 0.9996,
+      "recall": 0.9953
+    }
+  },
+  "notebook": "pair1_attack_classification.ipynb",
+  "test_predictions": {
+    "predicted_anomaly": 8617,
+    "rows": 22544
+  },
+  "validation_metrics": {
+    "Decision tree": {
+      "F1": 0.996,
+      "PR-AUC": 0.9939,
+      "ROC-AUC": 0.9947,
+      "accuracy": 0.9962,
+      "attacks caught": 2338,
+      "false alarms": 8,
+      "missed attacks": 11,
+      "normal passed": 2682,
+      "precision": 0.9966,
+      "recall": 0.9953
+    },
+    "Logistic regression": {
+      "F1": 0.9833,
+      "PR-AUC": 0.9977,
+      "ROC-AUC": 0.997,
+      "accuracy": 0.9845,
+      "attacks caught": 2296,
+      "false alarms": 25,
+      "missed attacks": 53,
+      "normal passed": 2665,
+      "precision": 0.9892,
+      "recall": 0.9774
+    },
+    "Majority baseline": {
+      "F1": 0.0,
+      "PR-AUC": 0.4662,
+      "ROC-AUC": 0.5,
+      "accuracy": 0.5338,
+      "attacks caught": 0,
+      "false alarms": 0,
+      "missed attacks": 2349,
+      "normal passed": 2690,
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    "Random forest": {
+      "F1": 0.9979,
+      "PR-AUC": 1.0,
+      "ROC-AUC": 1.0,
+      "accuracy": 0.998,
+      "attacks caught": 2339,
+      "false alarms": 0,
+      "missed attacks": 10,
+      "normal passed": 2690,
+      "precision": 1.0,
+      "recall": 0.9957
+    }
+  }
+}

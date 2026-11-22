@@ -124,19 +124,21 @@ def classify(event: RawEvent) -> tuple[Optional[str], Optional[Severity]]:
     if _has_exploit_pattern(event):
         return "T1190", Severity.HIGH
 
-    # T1595 - Active Scanning (scanner/probe paths)
-    if _is_scanner_probe(event):
-        return "T1595", Severity.LOW
-
     # T1059 - Command and Scripting Interpreter (shell commands)
     if event.command and event.service == Service.SSH:
         return "T1059", Severity.MEDIUM
 
-    # T1110 / T1110.004 - Brute Force / Credential Stuffing
+    # T1110 / T1110.004 - Brute Force / Credential Stuffing.
+    # Checked before scanner paths: a login POST to /admin or /wp-login.php that
+    # carries credentials is a password attempt, not just a probe of the path.
     if event.login_info and event.login_info.username and event.login_info.password_hash:
         if _is_credential_stuffing(event):
             return "T1110.004", Severity.HIGH
         return "T1110", Severity.MEDIUM
+
+    # T1595 - Active Scanning (scanner/probe paths)
+    if _is_scanner_probe(event):
+        return "T1595", Severity.LOW
 
     # T1078 - Valid Accounts (contextual, any accepted auth)
     if event.login_info and event.additional_info and event.additional_info.get("event_kind") == "auth":

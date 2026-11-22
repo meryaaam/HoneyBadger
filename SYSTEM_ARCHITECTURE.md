@@ -135,7 +135,7 @@ One container, one asyncio event loop, zero external brokers. All modules above 
 ```
 
 Password values are never accepted or returned — only `sha256:<64 hex>` hashes.
-Full REST/WS contract: `docs/API.md`.
+Full REST/WS contract: `backend/api.py` (shapes mirrored in `dashboard/src/types.ts`).
 
 ## 5. MITRE ATT&CK classification
 

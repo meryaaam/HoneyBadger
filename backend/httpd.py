@@ -6,8 +6,10 @@ and publishes raw events to the event bus.
 
 import hashlib
 import logging
+import re
 import time
 from typing import Optional
+from urllib.parse import parse_qsl, unquote_plus
 
 import aiohttp
 from aiohttp import web
@@ -25,6 +27,27 @@ from metrics import (
 from schemas import LoginInfo, RawEvent, Service
 
 logger = logging.getLogger(__name__)
+
+# Recorded paths keep the query string (exploit payloads usually live there),
+# but values of password-like parameters are redacted so no plaintext secret is stored.
+MAX_RECORDED_PATH = 2048
+_SECRET_PARAM = re.compile(r"(?i)(pass|pwd|secret|token|api[_-]?key|auth)")
+
+
+def recorded_path(path: str, query_string: str) -> str:
+    """Return the request path plus its URL-decoded query string, with secret values redacted.
+
+    Decoding lets analysts read the payload and lets the classifier match it
+    ("1%3D1" becomes "1=1").
+    """
+    if not query_string:
+        return path[:MAX_RECORDED_PATH]
+    pairs = parse_qsl(query_string, keep_blank_values=True)
+    if any(_SECRET_PARAM.search(key) for key, _ in pairs):
+        query = "&".join(f"{key}={'REDACTED' if _SECRET_PARAM.search(key) else value}" for key, value in pairs)
+    else:
+        query = unquote_plus(query_string)
+    return f"{path}?{query}"[:MAX_RECORDED_PATH]
 
 
 class HttpHoneypot:
@@ -192,7 +215,7 @@ class HttpHoneypot:
             login_info=login_info,
             user_agent=user_agent,
             http_method=method,
-            http_path=path,
+            http_path=recorded_path(path, request.query_string),
             http_status_code=response.status,
             additional_info={
                 "event_kind": "http_request",

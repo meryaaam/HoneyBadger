@@ -1,0 +1,135 @@
+{
+  "best_model": "One-Class SVM",
+  "config": {
+    "false_alarm_budget": 0.01,
+    "hyperparameters": {
+      "Isolation Forest": {
+        "n_estimators": 200
+      },
+      "Local Outlier Factor": {
+        "n_neighbors": 20,
+        "novelty": true
+      },
+      "One-Class SVM": {
+        "gamma": "scale",
+        "kernel": "rbf",
+        "nu": 0.01
+      }
+    },
+    "normal_calibration_rows": 2152,
+    "normal_fit_rows": 8607,
+    "one_class_svm_sample": 5000,
+    "prepared_columns": 51,
+    "seed": 42,
+    "validation_attacks": 2349,
+    "validation_rows": 5039
+  },
+  "data": {
+    "Test_data.csv": {
+      "bytes": 2416180,
+      "sha256": "a58db8c605e58411f6432dd9ab2fe10e1d768f058f5453e9e279788c7219caf8"
+    },
+    "Train_data.csv": {
+      "bytes": 2875560,
+      "sha256": "1e40eb667611ab507870fc5b5ef0a844201ec094915d78d79f4665937e43b07a"
+    }
+  },
+  "environment": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "python": "3.13.18",
+    "scikit-learn": "1.9.1"
+  },
+  "honeybadger_subset": {
+    "All features": {
+      "ROC-AUC": 0.9769,
+      "false alarms": 21,
+      "false-alarm rate": 0.0078,
+      "features": 39,
+      "missed attacks": 500,
+      "recall": 0.7871,
+      "recall at 1% FPR": 0.8429
+    },
+    "HoneyBadger-compatible": {
+      "ROC-AUC": 0.9271,
+      "false alarms": 28,
+      "false-alarm rate": 0.0104,
+      "features": 11,
+      "missed attacks": 1222,
+      "recall": 0.4798,
+      "recall at 1% FPR": 0.4593
+    }
+  },
+  "notebook": "pair2_anomaly_detection.ipynb",
+  "test_predictions": {
+    "predicted_anomaly": 8301,
+    "rows": 22544
+  },
+  "validation_metrics": {
+    "Isolation Forest": {
+      "F1": 0.9063,
+      "PR-AUC": 0.9815,
+      "ROC-AUC": 0.9825,
+      "attacks caught": 1973,
+      "false alarms": 32,
+      "false-alarm rate": 0.0119,
+      "missed attacks": 376,
+      "normal passed": 2658,
+      "precision": 0.984,
+      "recall": 0.8399,
+      "recall at 1% FPR": 0.8323
+    },
+    "Local Outlier Factor": {
+      "F1": 0.2039,
+      "PR-AUC": 0.8717,
+      "ROC-AUC": 0.9319,
+      "attacks caught": 269,
+      "false alarms": 21,
+      "false-alarm rate": 0.0078,
+      "missed attacks": 2080,
+      "normal passed": 2669,
+      "precision": 0.9276,
+      "recall": 0.1145,
+      "recall at 1% FPR": 0.1958
+    },
+    "One-Class SVM": {
+      "F1": 0.8765,
+      "PR-AUC": 0.9611,
+      "ROC-AUC": 0.9769,
+      "attacks caught": 1849,
+      "false alarms": 21,
+      "false-alarm rate": 0.0078,
+      "missed attacks": 500,
+      "normal passed": 2669,
+      "precision": 0.9888,
+      "recall": 0.7871,
+      "recall at 1% FPR": 0.8429
+    },
+    "Random forest (with labels)": {
+      "F1": 0.9979,
+      "PR-AUC": 1.0,
+      "ROC-AUC": 1.0,
+      "attacks caught": 2339,
+      "false alarms": 0,
+      "false-alarm rate": 0.0,
+      "missed attacks": 10,
+      "normal passed": 2690,
+      "precision": 1.0,
+      "recall": 0.9957,
+      "recall at 1% FPR": 0.9996
+    },
+    "Random score": {
+      "F1": 0.0232,
+      "PR-AUC": 0.4679,
+      "ROC-AUC": 0.503,
+      "attacks caught": 28,
+      "false alarms": 32,
+      "false-alarm rate": 0.0119,
+      "missed attacks": 2321,
+      "normal passed": 2658,
+      "precision": 0.4667,
+      "recall": 0.0119,
+      "recall at 1% FPR": 0.0085
+    }
+  }
+}

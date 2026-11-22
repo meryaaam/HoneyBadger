@@ -1,3 +1,4 @@
 -r requirements.txt
 pytest>=8
 mypy>=1.11
+psycopg2-binary>=2.9  # tests/attack_scenarios.py reads results from PostgreSQL
