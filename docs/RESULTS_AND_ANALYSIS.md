@@ -54,7 +54,7 @@ Cross-validated F1 for the random forest: 0.9975 ± 0.0007, consistent with the 
 
 ## 4. Objective 2: anomaly detection without labels (Pair 2)
 
-Notebook: `pair2_anomaly_detection.ipynb` (objective 2, Siwar and Shayma). Models are trained on **normal rows only** (8,607 rows); the alert threshold is the 99th percentile of scores on 2,152 other normal rows, so about 1% of normal traffic is flagged. Labels are only used to grade.
+
 
 | Model | ROC-AUC | Recall at 1% false alarms | At the alert threshold: caught | False alarms | Missed |
 |---|---|---|---|---|---|
