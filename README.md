@@ -32,6 +32,7 @@ A self-contained network honeypot suite: a **custom-built SSH and HTTP honeypot*
   - [Testing](#testing)
   - [Development without Docker](#development-without-docker)
   - [Troubleshooting](#troubleshooting)
+  - [Offline machine-learning analysis](#offline-machine-learning-analysis)
   - [Related docs](#related-docs)
   - [License](#license)
 
@@ -58,7 +59,7 @@ The entire system is designed around four goals, in priority order:
 - **Custom SSH emulation** (`asyncssh`) with an interactive fake shell that intercepts `wget`/`curl` — attackers get believable responses, we get the **payload metadata only**. Accepts any credentials, drops the peer into a realistic shell (`ls`, `cd`, `cat`, `whoami`, `id`, `uname`, `echo`, `history`, …).
 - **HTTP bait surface** (`aiohttp`) — fake login pages and common probe targets (`wp-login.php`, `/admin`, `.env`, API-key endpoints…) that respond convincingly to scanners.
 - **Two-stage async event bus**: raw events → enrichment pipeline (GeoIP, MITRE, credential extraction) → enriched events → dashboard. No external message broker.
-- **ATT&CK-native**: every event auto-tagged (T1110 brute force, T1110.004 credential stuffing, T1595 scanning, T1190 exploits, T1105 tool transfer, T1059 shell commands, T1078 valid accounts); the attack simulator *asserts* those tags in tests.
+- **ATT&CK-native**: every event auto-tagged (T1110 brute force, T1110.004 credential stuffing, T1595 scanning, T1190 exploits, T1105 tool transfer, T1059 shell commands, T1078 valid accounts); the rules are unit-tested (`backend/tests/test_mitre.py`) and checked end to end by `tests/attack_scenarios.py`.
 - **Safety by design**: passwords stored as **SHA-256 hashes only**, payloads never fetched or executed, no backdoor to the host. The honeypot makes no outbound connections except the cached GeoIP lookup (`ip-api` by default).
 - **Real-time dashboard** (React + Vite + TypeScript): a single-page threat-ops console with a live WebSocket feed, KPIs, activity chart, technique mix, world map, top credentials/sources and payloads.
 - **Full observability**: Prometheus metrics, curated alert rules, provisioned Grafana dashboards, Alertmanager routing.
@@ -152,11 +153,11 @@ sshd.py / httpd.py
 | Shell commands issued | `T1059` — Command and Scripting Interpreter |
 | "Successful" session context | `T1078` — Valid Accounts (contextual) |
 
-The attack simulator in `sim/simulate.py` asserts that generated attacks produce the correct technique tags — the classifier is verified by tests, not by hand.
+`sim/simulate.py` sends harmless demo attacks and prints the techniques recorded for them; `backend/tests/test_mitre.py` and `tests/attack_scenarios.py` check the tags automatically. Known gap: `T1078` is never produced, because every login already matches a `T1110` rule first (see [docs/TEST_REPORT.md](docs/TEST_REPORT.md)).
 
 ## Event model (intake contract)
 
-Events flow through the honeypot intake path and are persisted in this shape (full contract in **[docs/API.md](docs/API.md)**):
+Events flow through the honeypot intake path and are persisted in this shape (full contract in `backend/schemas.py`; the REST shapes are mirrored in `dashboard/src/types.ts`):
 
 ```jsonc
 {
@@ -218,11 +219,8 @@ HoneyBadger/
 │   │   └── migrations/
 │   ├── sim/
 │   │   └── simulate.py                    # Attack simulator / demo + integration driver
-│   └── tests/
-│       ├── test_fakeshell.py
-│       ├── test_mitre.py
-│       ├── test_pipeline.py
-│       └── test_ssh_handshake.py
+│   └── tests/                             # pytest: api (needs a test DB), bus, config, fakeshell,
+│                                          # httpd, mitre, pipeline, schemas, simulate, ssh
 │
 ├── dashboard/                             # React + Vite SPA (TypeScript)
 │   ├── package.json
@@ -261,19 +259,22 @@ HoneyBadger/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md                    # System design + component map
-│   ├── API.md                             # Agreed REST + WebSocket + metrics contract
-│   ├── ANALYSIS.md                        # Sample findings + interpretation template
+│   ├── ANALYSIS.md                        # Pointer to the analysis results
 │   ├── RESPONSIBLE_DISCLOSURE.md          # Ethics + responsible handling
-│   └── ROADMAP.md                         # Incremental slice plan + current status
+│   ├── RESULTS_AND_ANALYSIS.md            # Measured ML results and their meaning
+│   ├── TEST_REPORT.md                     # What was tested, what passed, what remains
+│   ├── DEMO_GUIDE.md                      # Step-by-step live demonstration
+│   ├── PROJECT_EXPLAINED_FROM_ZERO.md     # Beginner-to-advanced tutorial
+│   ├── PRESENTATION_SCRIPT.md             # Oral presentation (French) + 2-minute pitch
+│   ├── PROFESSOR_QA.md                    # Likely questions with answers (French)
+│   └── FINAL_PROJECT_REPORT.md            # Academic report
 │
 ├── tests/
-│   ├── integration/
-│   │   ├── test_end_to_end.sh             # Full flow
-│   │   └── test_api_contract.py           # Intake API compatibility
-│   ├── security/
-│   │   ├── test_network_isolation.sh      # Verify containment
-│   │   └── test_credentials.sh            # Verify hash-only policy
-│   └── fixtures/                          # Sample events, mock geoip data
+│   ├── attack_scenarios.py                # Live scenario runner (13 scenarios against a running stack)
+│   ├── test_attack_scenarios.py           # Same scenarios as pytest (needs pytest-asyncio + the stack)
+│   ├── run_attack_scenarios.sh            # Starts the compose stack and runs the scenarios
+│   ├── integration/, security/            # Empty placeholders: not implemented yet
+│   └── fixtures/
 ```
 
 ## Prerequisites
@@ -287,7 +288,7 @@ HoneyBadger/
 
 ```bash
 git clone https://github.com/scriptsl0th/HoneyBadger.git
-cd honeybadger
+cd HoneyBadger
 
 # 1. Configure (required — docker-compose reads .env; defaults are fine)
 cp .env.example .env
@@ -366,7 +367,7 @@ Then explore:
 | Metrics (`metrics.py`) | 8000 | 8000 |
 | Intake API (`api.py`) | 8090 | 8090 |
 | Dashboard (React SPA) | 80 (or 5173 dev) | 3000 |
-| PostgreSQL | 5432 | `127.0.0.1:5432` (loopback only) |
+| PostgreSQL | 5432 | `127.0.0.1:15432` (loopback only) |
 | Prometheus | 9090 | 9090 |
 | Alertmanager | 9093 | 9093 |
 | Grafana | 3000 | 3001 | (container→host)
@@ -386,7 +387,7 @@ Quick reference:
 ## APIs
 
 The backend exposes two surfaces on `:8090`, specified in
-**[docs/API.md](docs/API.md)** (agreed contract; `api.py` lands with slice 4):
+`backend/api.py` (shapes mirrored in `dashboard/src/types.ts`):
 
 - **REST** — `GET /health`, `GET /events` (`limit`, `service`, `severity`,
   `technique`, `since`, `until`), `GET /stats?window=`, and
@@ -417,7 +418,7 @@ backend only exports metrics, and there are no `HB_ALERT_*` variables.
 
 This project is designed to be harmless, on purpose:
 
-- **No plaintext credentials** — passwords are SHA-256-hashed at the edge; only hashes and aggregates are persisted (verified by `tests/security/test_credentials.sh`).
+- **No plaintext credentials** — passwords are SHA-256-hashed at the edge; only hashes and aggregates are persisted (checked by `backend/tests/test_httpd.py`; see [docs/TEST_REPORT.md](docs/TEST_REPORT.md)).
 - **No malware execution** — payloads are recorded as URL + hash + size only; optional (off-by-default) `CAPTURE_PAYLOADS` stages files into a **noexec quarantine** for manual static review. Payload URLs are never fetched and payload bytes are never executed.
 - **No connections to attacker-controlled hosts.** The only outbound traffic is the cached GeoIP lookup (`ip-api` by default; use `maxmind`/offline or `NullProvider` to remove it) plus image pulls. Containment/egress allow-listing is a backend-slice decision.
 - **Containment**: captured artifacts never reach the host filesystem or network, and the database is bound to loopback.
@@ -427,21 +428,24 @@ This project is designed to be harmless, on purpose:
 
 | Layer | What runs | Where |
 |---|---|---|
-| Unit | fakeshell parsing, MITRE classifier, pipeline enrichment, GeoIP caching, credential hashing | `backend/tests/` |
-| Integration | full end-to-end flow, intake API contract | `tests/integration/` |
-| Security | network isolation, hash-only credential policy | `tests/security/` |
-| Simulator | generates realistic traffic; *asserts* ATT&CK tags | `sim/simulate.py` |
+| Unit | fake shell, MITRE classifier, pipeline, HTTP sensor, bus, config, schemas, SSH, simulator | `backend/tests/` |
+| API + database | REST and WebSocket API against a real PostgreSQL (skipped without `HB_TEST_DATABASE_URL`) | `backend/tests/test_api.py` |
+| Live scenarios | 13 attack scenarios against a running stack | `tests/attack_scenarios.py` |
+| Demo traffic | harmless SSH + HTTP attacks; prints the recorded techniques | `backend/sim/simulate.py` |
 
 ```bash
-# Inside the backend container
-docker-compose exec backend pytest
+# Unit tests (from the repository root)
+pip install -r backend/requirements-dev.txt
+pytest
 
-# Integration / security scripts
-tests/integration/test_end_to_end.sh
-tests/integration/test_api_contract.py
-tests/security/test_network_isolation.sh
-tests/security/test_credentials.sh
+# Also run the API tests against an empty, disposable database
+HB_TEST_DATABASE_URL=postgresql+asyncpg://honeybadger:honeybadger@127.0.0.1:15432/honeybadger_test pytest
+
+# Live scenarios, with the stack running
+PYTHONPATH=backend python tests/attack_scenarios.py --db-dsn postgresql://honeybadger:honeybadger@127.0.0.1:15432/honeybadger
 ```
+
+`tests/integration/` and `tests/security/` contain empty placeholder files only. Results and known gaps: [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
 
 ## Development without Docker
 
@@ -474,11 +478,24 @@ You still need a PostgreSQL instance (and a `.env` pointing at it) for the backe
 - **Want a clean slate** — `docker-compose down -v` removes volumes (DB included).
 
 
+## Offline machine-learning analysis
+
+Three notebooks at the repository root analyse a public intrusion-detection dataset (Kaggle, 25,192 labeled connections). They run in Google Colab or locally, independently of Docker:
+
+| Notebook | Objective |
+|---|---|
+| `intrusion_analysis.ipynb` | Dataset audit and a first baseline |
+| `pair1_attack_classification.ipynb` | Detect attacks with labels (supervised classification) |
+| `pair2_anomaly_detection.ipynb` | Detect attacks without labels (anomaly detection) |
+
+`python scripts/run_analysis.py` re-runs the Pair 1 and Pair 2 notebooks and checks their results against the reference values. Results: [docs/RESULTS_AND_ANALYSIS.md](docs/RESULTS_AND_ANALYSIS.md). Live demo: [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md).
+
 ## Related docs
 
 - **[SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)** — design rationale, component table, deployment & testing strategy.
 - **[REPO_STRUCTURE.md](REPO_STRUCTURE.md)** — full file layout, port reference, event flow.
-- **docs/** — `ARCHITECTURE.md` (component map + data ownership + safety), `API.md` (REST/WS/metrics contract), `ANALYSIS.md` (sample findings), `RESPONSIBLE_DISCLOSURE.md` (ethics), `ROADMAP.md` (implementation slices).
+- **[PROJECT_INDEX.md](PROJECT_INDEX.md)** — entry points and the path of one event through the code.
+- **docs/** — `ARCHITECTURE.md` (component map + data ownership + safety), `RESPONSIBLE_DISCLOSURE.md` (ethics), and the presentation set: `PROJECT_EXPLAINED_FROM_ZERO.md`, `DEMO_GUIDE.md`, `RESULTS_AND_ANALYSIS.md`, `TEST_REPORT.md`, `PRESENTATION_SCRIPT.md`, `PROFESSOR_QA.md`, `FINAL_PROJECT_REPORT.md`.
 
 ## License
 

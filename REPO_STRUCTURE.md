@@ -88,10 +88,9 @@ HoneyBadger/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md                    # Component map, data ownership, safety
-│   ├── API.md                             # Agreed REST + WebSocket + metrics contract
-│   ├── ANALYSIS.md                        # Sample findings + interpretation template (empty)
-│   ├── RESPONSIBLE_DISCLOSURE.md          # Ethics + responsible handling (empty)
-│   └── ROADMAP.md                         # Incremental slice plan + current status
+│   ├── ANALYSIS.md                        # Pointer to RESULTS_AND_ANALYSIS.md
+│   ├── RESPONSIBLE_DISCLOSURE.md          # Ethics + responsible handling
+│   └── ...                                # Presentation set: see README "Related docs"
 │
 ├── tests/
 │   ├── integration/

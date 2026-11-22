@@ -1,7 +1,7 @@
 # HoneyBadger — Architecture
 
 Design-level companion to `README.md` / `SYSTEM_ARCHITECTURE.md`;
-`docs/API.md` is the wire-level contract.
+The wire-level contract is `backend/schemas.py` and `backend/api.py`, mirrored in `dashboard/src/types.ts`.
 
 ## 1. Component map and event pipeline
 
@@ -116,4 +116,4 @@ independent of Grafana — Grafana ships no geo map in v1.
 - **Monitoring configs absent:** bind-mounted directories make services start
   but report config errors until the monitoring slice lands.
 
-See `docs/API.md` for endpoint shapes, error codes and metric families.
+See `backend/api.py` for endpoint shapes and error codes, and `backend/metrics.py` for metric families.

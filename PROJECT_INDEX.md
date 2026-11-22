@@ -1,7 +1,7 @@
 # HoneyBadger project index
 
-Reviewed commit: `7e56a5326346d0a7d2d7a07061e206fb413829b5` (branch `main`, 2026-11-10).
-Index written 2026-11-19. Every path below was checked against that commit.
+Reviewed commit: `93a9d69` (`main` after PR #2) plus the `presentation-prep` changes listed in `CHANGELOG.md`.
+Index updated 2026-11-21. Every path below exists in that working tree.
 
 ## What the project is
 
@@ -88,8 +88,13 @@ It needs neither Docker nor the honeypot services nor the attack simulator.
 | `pair1_attack_classification.ipynb` | Group objective 1 (supervised attack detection): logistic regression, decision tree and random forest tuned with grouped cross-validation, threshold trade-off, interpretation, feature selection and a HoneyBadger-compatible feature subset |
 | `pair1_predictions.csv` | Output of the Pair 1 notebook: one prediction per `Test_data.csv` row, original order |
 | `train_prepared.csv`, `validation_prepared.csv`, `test_prepared.csv` | Pair 1 notebook output: the prepared data (constant columns dropped, one-hot encoding fitted on the training partition), with `source_row` back to the original CSV |
+| `pair2_anomaly_detection.ipynb` | Group objective 2 (detection without labels): Isolation Forest, One-Class SVM and Local Outlier Factor trained on normal traffic only, 1% false-alarm threshold. Siwar and Shayma |
+| `pair2_predictions.csv` | Output of the Pair 2 notebook: one anomaly score per `Test_data.csv` row, original order |
+| `results/pair1_results.json`, `results/pair2_results.json` | Settings and measured results saved by the notebooks |
+| `scripts/run_analysis.py`, `scripts/expected_results.json` | Re-runs both notebooks and checks 50 values against the reference |
+| `requirements-analysis.txt` | Python packages for the notebooks and the runner |
 
-The data CSVs, the prepared CSVs and both predictions files are listed in `.gitignore`. The notebooks download or
+The data CSVs, the prepared CSVs and the predictions files are listed in `.gitignore`. The notebooks download or
 regenerate them, and the Kaggle license is listed as "Unknown".
 
 Dataset: <https://www.kaggle.com/datasets/sampadab17/network-intrusion-detection>
@@ -109,15 +114,24 @@ the `service` concept (`ssh`, `http`) but little else. Scores on the Kaggle data
 not measure detection quality on live HoneyBadger events. The notebook's last section maps
 the fields and lists the evidence needed for a real evaluation.
 
-## Gaps noticed while indexing (not changed)
+## Documentation for the presentation
 
-- `README.md` links `docs/API.md` and `docs/ROADMAP.md`, which do not exist.
-  `docs/ANALYSIS.md`, `docs/RESPONSIBLE_DISCLOSURE.md` and `backend/alerts.py` are empty files.
-- `backend/sim/simulate.py` is a stub (`run_scenario` only sleeps) and has no `--count` or
-  `--delay` flags, although the README uses them. The working traffic driver is
-  `tests/attack_scenarios.py`.
-- `backend/pipeline.py` calls `record_payload_captured()` without importing it. The event is
-  already stored and published at that point, so payload events are logged as pipeline
-  errors and skip the latency metric.
-- PostgreSQL is published on host port `15432` in `docker-compose.yml`, while the README
-  table says `5432`.
+| File | Content |
+|---|---|
+| `docs/PROJECT_EXPLAINED_FROM_ZERO.md` | Beginner-to-advanced tutorial with diagrams |
+| `docs/DEMO_GUIDE.md` | Executable live demo with expected outputs |
+| `docs/RESULTS_AND_ANALYSIS.md` | Measured results and their interpretation |
+| `docs/TEST_REPORT.md` | Tests run, before/after results, bugs fixed, open issues |
+| `docs/PRESENTATION_SCRIPT.md` | Oral presentation and 2-minute pitch (French) |
+| `docs/PROFESSOR_QA.md` | 33 likely questions with answers (French) |
+| `docs/FINAL_PROJECT_REPORT.md` | Academic report (French) |
+
+## Gaps noticed while indexing
+
+Fixed on `presentation-prep` (see `CHANGELOG.md`): the pipeline import error, the simulator stub, the README's port and missing-doc links, and the empty `docs/ANALYSIS.md` and `docs/RESPONSIBLE_DISCLOSURE.md`.
+
+Still open:
+
+- `backend/alerts.py` is empty by design (Prometheus owns alerting).
+- `tests/integration/` and `tests/security/` hold empty placeholder files.
+- Brute force (T1110) vs credential stuffing (T1110.004) is defined differently in the README, `backend/mitre.py` and `tests/attack_scenarios.py`; T1078 is never produced. See `docs/TEST_REPORT.md`.

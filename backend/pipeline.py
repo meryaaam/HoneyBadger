@@ -16,6 +16,7 @@ from metrics import (
     record_geoip_cache_hit,
     record_geoip_cache_miss,
     record_geoip_lookup,
+    record_payload_captured,
     record_pipeline_error,
     record_pipeline_latency,
     record_storage_write,

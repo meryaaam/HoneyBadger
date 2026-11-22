@@ -232,7 +232,7 @@ BAIT_ROUTES: dict[str, dict[str, Handler]] = {
     "/admin": {"GET": lambda _: fake_admin_panel()},
     "/.env": {"GET": lambda _: fake_env_file()},
     "/.git/config": {"GET": lambda _: fake_git_config()},
-    "/phpmyadmin": {"GET": lambda _: fake_phpmyadmin(), "POST": fake_phpmyadmin},
+    "/phpmyadmin": {"GET": lambda _: fake_phpmyadmin(), "POST": lambda _: fake_phpmyadmin()},
     "/api": {"GET": lambda _: fake_api_endpoint()},
     "/api/v1": {"GET": lambda _: fake_api_endpoint()},
     "/api/v2": {"GET": lambda _: fake_api_endpoint()},

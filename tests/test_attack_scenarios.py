@@ -17,11 +17,13 @@ import pytest
 import asyncio
 from typing import AsyncGenerator
 
-# Import the test runner
+# Import the test runner (tests/attack_scenarios.py) from this folder.
+import socket
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from tests.attack_scenarios import AttackScenarioTester
+pytest.importorskip("pytest_asyncio", reason="install pytest-asyncio to run the live scenarios with pytest")
+from attack_scenarios import AttackScenarioTester  # noqa: E402
 
 
 # Test configuration from environment
@@ -32,6 +34,18 @@ HTTP_PORT = int(os.getenv("HB_TEST_HTTP_PORT", "8081"))
 API_HOST = os.getenv("HB_TEST_API_HOST", "127.0.0.1")
 API_PORT = int(os.getenv("HB_TEST_API_PORT", "8090"))
 DB_DSN = os.getenv("HB_TEST_DB_DSN", "postgresql://honeybadger:honeybadger@localhost:15432/honeybadger")
+
+
+def _reachable(host: str, port: int) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+if not _reachable(SSH_HOST, SSH_PORT):
+    pytest.skip(f"no honeypot listening on {SSH_HOST}:{SSH_PORT}; start the stack first", allow_module_level=True)
 
 
 @pytest.fixture(scope="session")

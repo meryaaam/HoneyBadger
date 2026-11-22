@@ -34,7 +34,9 @@ import asyncssh
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-# Add backend to path for imports
+# Add backend to path for imports (repository layout locally, /app/backend in the test image)
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend"))
 sys.path.insert(0, "/app")
 
 from schemas import Service, Severity
@@ -121,17 +123,22 @@ class AttackScenarioTester:
                 cur.execute(query, params)
                 return cur.fetchall()
 
+    # Newest attacker events. Each SSH connection also stores an "ssh_handshake" row
+    # (no technique, no credentials); counting those would hide real events.
+    _RECENT_EVENTS_SQL = (
+        "SELECT * FROM events WHERE COALESCE(additional_info->>'event_kind', '') <> 'ssh_handshake' "
+        "ORDER BY ts DESC LIMIT %s"
+    )
+
     def _wait_for_events(self, min_count: int, timeout: float = 10.0) -> list[dict]:
         """Wait for events to appear in database."""
         start = time.time()
         while time.time() - start < timeout:
-            events = self._db_query(
-                "SELECT * FROM events ORDER BY ts DESC LIMIT %s", (min_count,)
-            )
+            events = self._db_query(self._RECENT_EVENTS_SQL, (min_count,))
             if len(events) >= min_count:
                 return events
             time.sleep(0.5)
-        return self._db_query("SELECT * FROM events ORDER BY ts DESC LIMIT %s", (min_count,))
+        return self._db_query(self._RECENT_EVENTS_SQL, (min_count,))
 
     # ============================================================
     # SSH Attack Scenarios
@@ -177,7 +184,8 @@ class AttackScenarioTester:
 
         # Wait for events to be processed
         await asyncio.sleep(2)
-        events = self._wait_for_events(len(credentials))
+        # Each login also runs one command, so read 2 events per login and keep the logins.
+        events = [e for e in self._wait_for_events(len(credentials) * 2) if e["command"] is None]
 
         # Verify classification
         cred_events = [e for e in events if e["technique_id"] == "T1110.004"]
@@ -226,7 +234,8 @@ class AttackScenarioTester:
             await asyncio.sleep(0.1)
 
         await asyncio.sleep(2)
-        events = self._wait_for_events(len(passwords))
+        # Each login also runs one command, so read 2 events per login and keep the logins.
+        events = [e for e in self._wait_for_events(len(passwords) * 2) if e["command"] is None]
 
         brute_events = [e for e in events if e["technique_id"] == "T1110" and e["severity"] == "medium"]
         results["events_captured"] = len(events)

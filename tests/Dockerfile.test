@@ -29,7 +29,7 @@ COPY tests/ ./tests/
 COPY backend/ ./backend/
 
 # Set Python path
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/backend
 
 # Default command runs all attack scenarios
 CMD ["python3", "tests/attack_scenarios.py"]
