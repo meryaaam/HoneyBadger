@@ -80,8 +80,10 @@ Local traffic (127.0.0.1) has no location, so the map stays empty. That is expec
 ### A5. Generate a realistic wave (60 s)
 
 ```powershell
-docker compose exec backend python -m sim.simulate --count 12 --delay 0.2
+docker compose exec backend python -m sim.simulate --count 12 --delay 0.2 --spoof-sources
 ```
+
+`--spoof-sources` makes the web probes appear to come from 10 public addresses on six continents (via the `X-Forwarded-For` header), so the world map has points. Without it, every simulated attack comes from 127.0.0.1, which has no location. **Say it is demo data** if you show the map.
 
 Expected output (counts vary slightly with what is already in the window):
 
