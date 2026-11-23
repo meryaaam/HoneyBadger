@@ -12,7 +12,7 @@ Two parts: **A. the honeypot catching attacks live** (4 minutes) and **B. the ma
 | Environment file | `copy .env.example .env` | File created |
 | Images built | `docker compose build` | Finishes without error (several minutes the first time) |
 | Ports free | close anything on 3000, 3001, 8000, 8022, 8081, 8090, 9090, 9093 | |
-| Notebook ready | open `pair1_attack_classification.ipynb` in Colab with both CSVs uploaded, Run all once | Runs without error |
+| Notebook ready | open `notebooks/pair1_attack_classification.ipynb` in Colab with both CSVs uploaded, Run all once | Runs without error |
 | Fallback ready | `cd dashboard; npm install` | Needed only for the mock-mode fallback |
 
 ## Part A: the honeypot live (4 minutes)
@@ -100,7 +100,7 @@ Grafana at http://localhost:3001 (dashboards "Overview", "Attack Patterns"). **S
 
 ## Part B: the machine-learning results (2 minutes)
 
-Open `pair1_attack_classification.ipynb` (Colab or Jupyter). All outputs are saved inside, so nothing has to run live. Scroll to:
+Open `notebooks/pair1_attack_classification.ipynb` (Colab or Jupyter). All outputs are saved inside, so nothing has to run live. Scroll to:
 
 1. **§2.3 Class balance chart.** **Say:** « 25 192 connexions étiquetées, presque équilibrées : 53 % normales, 47 % attaques. »
 2. **§4.2 Results table and confusion matrices.** **Say:** « Sur 5 039 connexions jamais vues pendant l'entraînement, la forêt aléatoire attrape 2 339 attaques sur 2 349, sans aucune fausse alerte. La référence naïve n'en attrape aucune. »
@@ -133,7 +133,7 @@ docker compose down -v     # also deletes the database
 | `ssh` asks for a key or refuses | Use `ssh -o PreferredAuthentications=password -p 8022 root@localhost` |
 | Simulator prints "Could not read .../events" | The API is not up yet; wait and rerun with `--no-check` |
 | Everything fails on the day | Fallback: run the dashboard with demo data, no backend: `cd dashboard`, `$env:VITE_API_MODE="mock"; npm run dev`, open http://localhost:5173. Say that it shows bundled sample data. Then go straight to Part B. |
-| Notebook won't load the CSVs | Drag `Train_data.csv` and `Test_data.csv` into Colab's Files panel and run again |
+| Notebook won't load the CSVs | In Colab: drag `Train_data.csv` and `Test_data.csv` into the Files panel and run again. Locally: put them in `data/` |
 
 ## Running without Docker (tested path)
 
